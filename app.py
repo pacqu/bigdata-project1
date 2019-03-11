@@ -35,6 +35,11 @@ def create_org_user_rel(tx, userid, name, orgtype):
     CREATE (a)<-[:WORKS_FOR]-(b)
     RETURN id(a), id(b)''', userid=userid, name=name, orgtype=orgtype).data()
 
+def create_dist_rel(tx, org1, org2, dist):
+    return tx.run('''MATCH (a:Organization {name: $org1}), (b:Organization {name: $org2})
+    CREATE (a)-[:DISTANCE{distance: $dist}]->(b)
+    RETURN id(a), id(b)''', org1=org1, org2=org2, dist=dist).data()
+
 def print_orgs(tx):
     return tx.run("MATCH (a:Organization) RETURN a").data()
 
@@ -47,11 +52,20 @@ def parse_org_csv():
                 print(session.write_transaction(create_org_node, row[1], row[2]))
                 print(session.write_transaction(create_org_user_rel, row[0], row[1], row[2]))
 
+def parse_dist_csv():
+    with open('Data/distance.csv', newline='') as distcsv:
+        orgreader = csv.reader(distcsv, delimiter=',', quotechar='|')
+        for row in orgreader:
+            if row[2] != 'Distance':
+                print(row)
+                print(session.write_transaction(create_dist_rel, row[0], row[1], row[2]))
+
 with driver.session() as session:
     print(session.write_transaction(clear_users))
     print(session.write_transaction(clear_orgs))
     parse_user_csv()
     parse_org_csv()
+    parse_dist_csv()
     #print session.write_transaction(create_user_node,'Noam')
     print(session.read_transaction(print_users))
     print(session.read_transaction(print_orgs))
