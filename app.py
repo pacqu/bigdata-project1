@@ -1,4 +1,6 @@
 from neo4j import GraphDatabase
+import csv
+with open('eggs.csv', 'rb') as csvfile:
 
 driver = GraphDatabase.driver("bolt://localhost:7687", auth=("neo4j", "password"))
 
