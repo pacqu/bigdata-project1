@@ -14,7 +14,7 @@ def print_users(tx):
     return tx.run("MATCH (a:User) RETURN a").data()
 
 def parse_user_csv():
-    with open('Data/user.csv', 'rb') as usercsv:
+    with open('Data/user.csv', newline='') as usercsv:
         userreader = csv.reader(usercsv, delimiter=',', quotechar='|')
         for row in userreader:
             if row[0] != 'User_id':
@@ -26,17 +26,20 @@ def clear_orgs(tx):
     return tx.run("MATCH (n:Organization) DETACH DELETE n").data()
 
 def create_org_node(tx, name, orgtype):
+    curr_org_check = tx.run("MATCH (a:Organization {name: $name, org_type:$orgtype}) RETURN id(a)", name=name, orgtype=orgtype).data()
+    if len(curr_org_check) > 0: return curr_org_check
     return tx.run("CREATE (a:Organization {name: $name, org_type:$orgtype})", name=name, orgtype=orgtype).data()
 
 def create_org_user_rel(tx, userid, name, orgtype):
-    return tx.run('''MATCH (a:Organization {name: $name, org_type:$orgtype}, (b:User {user_id:$userid}))
-    CREATE (a)<-[:WORKS_FOR]-(b)''', userid=userid, name=name, orgtype=orgtype).data()
+    return tx.run('''MATCH (a:Organization {name: $name, org_type:$orgtype}), (b:User {user_id:$userid})
+    CREATE (a)<-[:WORKS_FOR]-(b)
+    RETURN id(a), id(b)''', userid=userid, name=name, orgtype=orgtype).data()
 
 def print_orgs(tx):
     return tx.run("MATCH (a:Organization) RETURN a").data()
 
 def parse_org_csv():
-    with open('Data/organization.csv', 'rb') as orgcsv:
+    with open('Data/organization.csv', newline='') as orgcsv:
         orgreader = csv.reader(orgcsv, delimiter=',', quotechar='|')
         for row in orgreader:
             if row[0] != 'User_id':
