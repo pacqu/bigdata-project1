@@ -60,12 +60,37 @@ def parse_dist_csv():
                 print(row)
                 print(session.write_transaction(create_dist_rel, row[0], row[1], row[2]))
 
+
+#Proj Functions
+def clear_projs(tx):
+    return tx.run("MATCH (n:Project) DETACH DELETE n").data()
+
+def create_proj_node(tx,project):
+    curr_proj_check = tx.run("MATCH (a:Project {project:$project}) RETURN id(a)", project=project).data()
+    if len(curr_proj_check) > 0: return curr_proj_check
+    return tx.run("CREATE (a:Project {project:$project})", project=project).data()
+
+def create_proj_user_rel(tx, userid, project):
+    return tx.run('''MATCH (a:Project {project: $project}), (b:User {user_id:$userid})
+    CREATE (a)<-[:WORKED_ON]-(b)
+    RETURN id(a), id(b)''', userid=userid, project=project).data()
+
+def parse_proj_csv():
+    with open('Data/project.csv', newline='') as projcsv:
+        orgreader = csv.reader(projcsv, delimiter=',', quotechar='|')
+        for row in orgreader:
+            if row[1] != 'Project':
+                print(row)
+                print(session.write_transaction(create_proj_node, row[1]))
+                print(session.write_transaction(create_proj_user_rel, row[0], row[1]))
+
 with driver.session() as session:
     print(session.write_transaction(clear_users))
     print(session.write_transaction(clear_orgs))
     parse_user_csv()
     parse_org_csv()
     parse_dist_csv()
+    parse_proj_csv()
     #print session.write_transaction(create_user_node,'Noam')
     print(session.read_transaction(print_users))
     print(session.read_transaction(print_orgs))
