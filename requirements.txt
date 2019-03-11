@@ -1,0 +1,4 @@
+neo4j==1.7.2
+neobolt==1.7.4
+neotime==1.7.4
+pymongo==3.7.2
