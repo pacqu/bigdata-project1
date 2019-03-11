@@ -38,7 +38,7 @@ def create_org_user_rel(tx, userid, name, orgtype):
 def create_dist_rel(tx, org1, org2, dist):
     return tx.run('''MATCH (a:Organization {name: $org1}), (b:Organization {name: $org2})
     CREATE (a)-[:DISTANCE{distance: $dist}]->(b)
-    RETURN id(a), id(b)''', org1=org1, org2=org2, dist=dist).data()
+    RETURN id(a), id(b)''', org1=org1, org2=org2, dist=float(dist)).data()
 
 def print_orgs(tx):
     return tx.run("MATCH (a:Organization) RETURN a").data()
