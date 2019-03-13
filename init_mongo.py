@@ -94,3 +94,13 @@ def initDistance():
             distance_id = distances.insert_one(distance).inserted_id
             # TEST
             # pprint.pprint(distances.find_one({"organization_1":'Hunter'}))
+
+def find_trusted_collaborators_skills(userids=[1,4,5,6]):
+    # userids=[1,4,5,6]
+    for userid in userids:
+        for user_skill in db.skills.find({"user_id":userid}):
+            # pprint.pprint(user_skill)
+        # pprint.pprint(db.skills.find({"user_id":userid}))
+
+initSkill()
+# find_trusted_collaborators_skills()
