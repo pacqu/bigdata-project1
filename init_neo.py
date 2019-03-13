@@ -19,7 +19,8 @@ def parse_user_csv(session):
         for row in userreader:
             if row[0] != 'User_id':
                 #print(row)
-                print(session.write_transaction(create_user_node,row[0], row[1], row[2]))
+                user = session.write_transaction(create_user_node,row[0], row[1], row[2])
+                #print(user)
 
 #Org Functions
 def clear_orgs(tx):
@@ -48,17 +49,20 @@ def parse_org_csv(session):
         orgreader = csv.reader(orgcsv, delimiter=',', quotechar='|')
         for row in orgreader:
             if row[0] != 'User_id':
-                print(row)
-                print(session.write_transaction(create_org_node, row[1], row[2]))
-                print(session.write_transaction(create_org_user_rel, row[0], row[1], row[2]))
+                #print(row)
+                org = session.write_transaction(create_org_node, row[1], row[2])
+                #print(org)
+                rel = session.write_transaction(create_org_user_rel, row[0], row[1], row[2])
+                #print(rel)
 
 def parse_dist_csv(session):
     with open('Data/distance.csv', newline='') as distcsv:
         orgreader = csv.reader(distcsv, delimiter=',', quotechar='|')
         for row in orgreader:
             if row[2] != 'Distance':
-                print(row)
-                print(session.write_transaction(create_dist_rel, row[0], row[1], row[2]))
+                #print(row)
+                dist = session.write_transaction(create_dist_rel, row[0], row[1], row[2])
+                #print dist
 
 #Proj Functions
 def clear_projs(tx):
@@ -79,9 +83,11 @@ def parse_proj_csv(session):
         orgreader = csv.reader(projcsv, delimiter=',', quotechar='|')
         for row in orgreader:
             if row[1] != 'Project':
-                print(row)
-                print(session.write_transaction(create_proj_node, row[1]))
-                print(session.write_transaction(create_proj_user_rel, row[0], row[1]))
+                #print(row)
+                proj = session.write_transaction(create_proj_node, row[1])
+                #print(proj)
+                rel = session.write_transaction(create_proj_user_rel, row[0], row[1])
+                #print(rel)
 
 def init_neo():
     with driver.session() as session:
@@ -119,12 +125,33 @@ def match_projs(session):
 
 def match_uni_connect_users(tx, originid):
     return tx.run('''MATCH
-    p=(a:User{user_id: $userid})-[:WORKS_FOR]->(b:Organization{org_type:'U'})-[:DISTANCE*]->(c)<-[:WORKS_FOR]-(d)
+    p=(o_user:User{user_id: $userid})-[:WORKS_FOR]->(o_org:Organization{org_type:'U'})-[:DISTANCE*]->(d_org)<-[:WORKS_FOR]-(d_user)
     WITH *,relationships(p) AS f
     WITH *,[n in f WHERE n.distance IS NOT NULL] as noNull
     WITH *, reduce(totalDist = 0, n in noNull|totalDist + n.distance) as totalDist
-    RETURN a,b,totalDist,c,d ORDER BY totalDist''', userid=originid).data()
+    RETURN o_user,o_org,totalDist,d_org,d_user ORDER BY totalDist''', userid=originid).data()
 
 def find_uni_connect_users(originid):
+    final_connections = {}
     with driver.session() as session:
-        return session.write_transaction(match_uni_connect_users, originid)
+        connections = session.write_transaction(match_uni_connect_users, originid)
+        for connection in connections:
+            if connection['totalDist'] > 10:
+                break
+            #print(connection['d_user']['user_id'])
+            if connection['d_user']['user_id'] in final_connections:
+                continue
+            final_connections[connection['d_user']['user_id']] = {
+            'first_name': 'yes',
+            'last_name': 'yes'
+            }
+        return connections
+
+
+
+
+u = find_uni_connect_users('1')
+'''
+for node in u:
+    print(node)
+    '''
