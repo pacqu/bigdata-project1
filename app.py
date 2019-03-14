@@ -15,3 +15,6 @@ def run():
     command_line()
 
 run()
+
+# init_neo.find_trusted_collaborators('1')
+# init_neo.find_uni_connect_users('1')
