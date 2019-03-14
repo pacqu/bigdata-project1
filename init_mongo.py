@@ -5,9 +5,10 @@ import csv
 import pprint
 from pymongo import MongoClient
 client = MongoClient()
-# client.drop_database('<DBNAME>')
+
 
 db = client.test_database
+client.drop_database(db)
 # client.db.command("dropDatabase")
 
 
@@ -21,9 +22,10 @@ def initUser():
         usercsv.readline()
         user_reader = csv.reader(usercsv, delimiter=',', quotechar='|')
         for row in user_reader:
-            user = {"user_id": row[0],
+            user = {"user_id": int(row[0]),
                     "first_name": row[1],
-                    "last_name": row[2]}
+                    "last_name": row[2]
+                    }
             # print(user)
             users_id = users.insert_one(user).inserted_id
             # TEST
@@ -31,18 +33,24 @@ def initUser():
 
 
 def initSkill():
-    skills = db.skills
+    # print('init skill')
+    users = db.users
+    users_skills = {}
+    # {1: [{"yapping": 2},{"emails": 3}]}
     with open('Data/skill.csv') as skillcsv:
         skillcsv.readline()
         skill_reader = csv.reader(skillcsv, delimiter=',', quotechar='|')
         for row in skill_reader:
-            skill = {"user_id":row[0],
-                    "skill": row[1],
-                    "skill_level": row[2]
-                    }
-            skill_id = skills.insert_one(skill).inserted_id
+            if row[0] in users_skills:
+                users_skills[row[0]].append({row[1]:row[2]})
+            else:
+                users_skills[row[0]]=[{row[1]:row[2]}]
+        for user_id in users_skills:
+            # print(users_skills[user_id])
+            users.update({'user_id':int(user_id)},
+                         {'$set':{'skills':users_skills[user_id]}})
             # TEST
-            # pprint.pprint(skills.find_one({"user_id":1}))
+        # pprint.pprint(users.find_one({"user_id":1}))
 
 def initProject():
     projects = db.projects
@@ -50,7 +58,7 @@ def initProject():
         projectcsv.readline()
         project_reader = csv.reader(projectcsv, delimiter=',', quotechar='|')
         for row in project_reader:
-            project = {"user_id":row[0],
+            project = {"user_id":int(row[0]),
                     "project": row[1],
                     }
             project_id = projects.insert_one(project).inserted_id
@@ -63,7 +71,7 @@ def initOrganization():
         organizationcsv.readline()
         organization_reader = csv.reader(organizationcsv, delimiter=',', quotechar='|')
         for row in organization_reader:
-            organization = {"user_id":row[0],
+            organization = {"user_id":int(row[0]),
                             "organization":row[1],
                             "organization_type": row[2]}
             organization_id = organizations.insert_one(organization).inserted_id
@@ -76,7 +84,7 @@ def initInterest():
         interestcsv.readline()
         interest_reader = csv.reader(interestcsv, delimiter=',', quotechar='|')
         for row in interest_reader:
-            interest = {"user_id":row[0],
+            interest = {"user_id":int(row[0]),
                         "interest":row[1],
                         "interest_level": row[2]}
             interest_id = interests.insert_one(interest).inserted_id
@@ -95,12 +103,26 @@ def initDistance():
             # TEST
             # pprint.pprint(distances.find_one({"organization_1":'Hunter'}))
 
-def find_trusted_collaborators_skills(userids=[1,4,5,6]):
-    # userids=[1,4,5,6]
+def find_trusted_collaborators_skills(origin_id, userids, skill):
+    userids=[1,4,5,6]
+    trusted_collaborators = []
+    skill ='emailing'
+    users = db.users
     for userid in userids:
-        for user_skill in db.skills.find({"user_id":userid}):
-            # pprint.pprint(user_skill)
-        # pprint.pprint(db.skills.find({"user_id":userid}))
+        print(userid)
+        pp = users.find_one({"user_id":userid})
+        for skills in pp['skills']:
+            if 'emailing' in skills:
+                trusted_collaborators.append(userid)
+    print(trusted_collaborators)
+    return trusted_collaborators
 
-initSkill()
-# find_trusted_collaborators_skills()
+
+
+def runAll():
+    initUser()
+    initSkill()
+    find_trusted_collaborators_skills()
+
+
+runAll()
