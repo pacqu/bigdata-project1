@@ -1,10 +1,10 @@
 User_id,Skill,Skill Level
-1,"""yapping""",9
-1,"""emailing""",5
-2,"""coding""",10
-2,"""emailing""",7
-3,"""stressing""",10
-4,"""russian""",8
-4,"""better_than_noam""",10
-5,"""drinking""",2
-6,"""managing""",7
+1,yapping,9
+1,emailing,5
+2,coding,10
+2,emailing,7
+3,stressing,10
+4,russian,8
+4,better_than_noam,10
+5,drinking,2
+6,managing,7
