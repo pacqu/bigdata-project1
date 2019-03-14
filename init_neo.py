@@ -130,28 +130,56 @@ def match_uni_connect_users(tx, originid):
     WITH *,relationships(p) AS f
     WITH *,[n in f WHERE n.distance IS NOT NULL] as noNull
     WITH *, reduce(totalDist = 0, n in noNull|totalDist + n.distance) as totalDist
+    WHERE totalDist <= 10
     RETURN o_user,o_org,totalDist,d_org,d_user ORDER BY totalDist''', userid=originid).data()
 
+#MIGHT NOT BE NECESSARY, WORKS FOR READABILITY OF OUTPUT
 def find_uni_connect_users(originid):
+    results = {}
     final_connections = {}
     with driver.session() as session:
         connections = session.write_transaction(match_uni_connect_users, originid)
+        if len(connections) > 0:
+            connection = connections[0]
+            results['o_user'] = {
+            'first_name': connection['o_user']['first_name'],
+            'last_name': connection['o_user']['last_name'],
+            'org': {
+            'name': connection['o_org']['name'],
+            'org_type': connection['o_org']['org_type']
+            }
+            }
         for connection in connections:
-            if connection['totalDist'] > 10:
-                break
-            #print(connection['d_user']['user_id'])
             if connection['d_user']['user_id'] in final_connections:
                 continue
             final_connections[connection['d_user']['user_id']] = {
-            'first_name': 'yes',
-            'last_name': 'yes'
+            'first_name': connection['d_user']['first_name'],
+            'last_name': connection['d_user']['last_name'],
+            'org': {
+            'name': connection['d_org']['name'],
+            'org_type': connection['d_org']['org_type']
+            },
+            'totalDist': connection['totalDist']
             }
-        return connections
+    results['connections'] = final_connections
+    return results
+
+
+u = find_uni_connect_users('1')
+for i in u:
+    if i == 'connections':
+        print('Connections:')
+        for j in u[i]:
+            print(j + ': ' +str(u[i][j]))
+    else:
+        print(i + ': '+ str(u[i]))
+
 # (a:User{user_id:$userid})-[:WORKED_ON]->(proj1)<-[:WORKED_ON]-(b:User)-[:WORKED_ON]->(proj2)<-[:WORKED_ON]-(c)
 def match_trusted_collaborators(tx, originid):
     return tx.run('''MATCH
     (a:User{user_id:$userid})-[:WORKED_ON]->(p:Project)<-[:WORKED_ON]-(b:User)-[:WORKED_ON]->(p2:Project)<-[:WORKED_ON]-(c)
-    RETURN b.user_id,c.user_id ''', userid=originid).data()
+    RETURN a,b,c ''', userid=originid).data()
+
 def find_trusted_collaborators(originid):
     with driver.session() as session:
         trusted = session.write_transaction(match_trusted_collaborators, originid)
