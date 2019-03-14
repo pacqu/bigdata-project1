@@ -1,5 +1,6 @@
 import csv
 from neo4j import GraphDatabase
+from itertools import islice
 
 driver = GraphDatabase.driver("bolt://localhost:7687", auth=("neo4j", "password"))
 
@@ -150,27 +151,14 @@ def find_uni_connect_users(originid):
 def match_trusted_collaborators(tx, originid):
     return tx.run('''MATCH
     (a:User{user_id:$userid})-[:WORKED_ON]->(p:Project)<-[:WORKED_ON]-(b:User)-[:WORKED_ON]->(p2:Project)<-[:WORKED_ON]-(c)
-    RETURN a,b,c ''', userid=originid).data()
+    RETURN b.user_id,c.user_id ''', userid=originid).data()
 def find_trusted_collaborators(originid):
     with driver.session() as session:
         trusted = session.write_transaction(match_trusted_collaborators, originid)
         userids = []
         for trust in trusted:
-            a_id = trust['a']['user_id']
-            b_id = trust['b']['user_id']
-            c_id = trust['c']['user_id']
-            if a_id not in userids:
-                userids.append(a_id)
-            if b_id not in userids:
-                userids.append(b_id)
-            if c_id not in userids:
-                userids.append(c_id)
+            user, id = islice(trust.values(),2)
+            if id not in userids:
+                userids.append(id)
         print(userids)
-
-
-
-u = find_uni_connect_users('1')
-'''
-for node in u:
-    print(node)
-    '''
+        return userids
