@@ -1,5 +1,6 @@
 import csv
 from neo4j import GraphDatabase
+from itertools import islice
 
 driver = GraphDatabase.driver("bolt://localhost:7687", auth=("neo4j", "password"))
 
@@ -18,8 +19,8 @@ def parse_user_csv(session):
         userreader = csv.reader(usercsv, delimiter=',', quotechar='|')
         for row in userreader:
             if row[0] != 'User_id':
-                #print(row)
-                user = session.write_transaction(create_user_node,row[0], row[1], row[2])
+                # print(row)
+                user = session.write_transaction(create_user_node,int(row[0]), row[1], row[2])
                 #print(user)
 
 #Org Functions
@@ -49,11 +50,11 @@ def parse_org_csv(session):
         orgreader = csv.reader(orgcsv, delimiter=',', quotechar='|')
         for row in orgreader:
             if row[0] != 'User_id':
-                #print(row)
+                # print(row)
                 org = session.write_transaction(create_org_node, row[1], row[2])
-                #print(org)
-                rel = session.write_transaction(create_org_user_rel, row[0], row[1], row[2])
-                #print(rel)
+                # print(org)
+                rel = session.write_transaction(create_org_user_rel, int(row[0]), row[1], row[2])
+                # print(rel)
 
 def parse_dist_csv(session):
     with open('Data/distance.csv', newline='') as distcsv:
@@ -83,12 +84,15 @@ def parse_proj_csv(session):
         orgreader = csv.reader(projcsv, delimiter=',', quotechar='|')
         for row in orgreader:
             if row[1] != 'Project':
-                #print(row)
+                # print(row)
                 proj = session.write_transaction(create_proj_node, row[1])
                 #print(proj)
-                rel = session.write_transaction(create_proj_user_rel, row[0], row[1])
+                rel = session.write_transaction(create_proj_user_rel, int(row[0]), row[1])
                 #print(rel)
 
+def clear_all():
+    with driver.session() as session:
+        cleared = session.write_transaction(clear_users)
 def init_neo():
     with driver.session() as session:
         cleared = session.write_transaction(clear_users)
@@ -129,29 +133,63 @@ def match_uni_connect_users(tx, originid):
     WITH *,relationships(p) AS f
     WITH *,[n in f WHERE n.distance IS NOT NULL] as noNull
     WITH *, reduce(totalDist = 0, n in noNull|totalDist + n.distance) as totalDist
+    WHERE totalDist <= 10
     RETURN o_user,o_org,totalDist,d_org,d_user ORDER BY totalDist''', userid=originid).data()
 
+#MIGHT NOT BE NECESSARY, WORKS FOR READABILITY OF OUTPUT
 def find_uni_connect_users(originid):
+    results = {}
     final_connections = {}
     with driver.session() as session:
         connections = session.write_transaction(match_uni_connect_users, originid)
+        if len(connections) > 0:
+            connection = connections[0]
+            results['o_user'] = {
+            'first_name': connection['o_user']['first_name'],
+            'last_name': connection['o_user']['last_name'],
+            'org': {
+            'name': connection['o_org']['name'],
+            'org_type': connection['o_org']['org_type']
+            }
+            }
         for connection in connections:
-            if connection['totalDist'] > 10:
-                break
-            #print(connection['d_user']['user_id'])
             if connection['d_user']['user_id'] in final_connections:
                 continue
             final_connections[connection['d_user']['user_id']] = {
-            'first_name': 'yes',
-            'last_name': 'yes'
+            'first_name': connection['d_user']['first_name'],
+            'last_name': connection['d_user']['last_name'],
+            'org': {
+            'name': connection['d_org']['name'],
+            'org_type': connection['d_org']['org_type']
+            },
+            'totalDist': connection['totalDist']
             }
-        return connections
+    results['connections'] = final_connections
+    return results
 
 
+# u = find_uni_connect_users('1')
+# for i in u:
+#     if i == 'connections':
+#         print('Connections:')
+#         for j in u[i]:
+#             print(j + ': ' +str(u[i][j]))
+#     else:
+#         print(i + ': '+ str(u[i]))
 
+# (a:User{user_id:$userid})-[:WORKED_ON]->(proj1)<-[:WORKED_ON]-(b:User)-[:WORKED_ON]->(proj2)<-[:WORKED_ON]-(c)
+def match_trusted_collaborators(tx, originid):
+    return tx.run('''MATCH
+    (a:User{user_id:$userid})-[:WORKED_ON]->(p:Project)<-[:WORKED_ON]-(b:User)-[:WORKED_ON]->(p2:Project)<-[:WORKED_ON]-(c)
+    RETURN b.user_id,c.user_id''', userid=originid).data()
 
-u = find_uni_connect_users('1')
-'''
-for node in u:
-    print(node)
-    '''
+def find_trusted_collaborators(originid):
+    with driver.session() as session:
+        trusted = session.write_transaction(match_trusted_collaborators, originid)
+        userids = []
+        for trust in trusted:
+            user, id = islice(trust.values(),2)
+            if id not in userids:
+                userids.append(id)
+        print(userids)
+        return userids
