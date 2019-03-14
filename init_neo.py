@@ -164,7 +164,7 @@ def find_uni_connect_users(originid):
     return results
 
 
-u = find_uni_connect_users('1')
+'''u = find_uni_connect_users('1')
 for i in u:
     if i == 'connections':
         print('Connections:')
@@ -172,3 +172,4 @@ for i in u:
             print(j + ': ' +str(u[i][j]))
     else:
         print(i + ': '+ str(u[i]))
+'''
