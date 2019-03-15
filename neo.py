@@ -90,9 +90,10 @@ def parse_proj_csv(session):
                 rel = session.write_transaction(create_proj_user_rel, int(row[0]), row[1])
                 #print(rel)
 
-def clear_all():
+def clear_neo():
     with driver.session() as session:
         cleared = session.write_transaction(clear_users)
+
 def init_neo():
     with driver.session() as session:
         cleared = session.write_transaction(clear_users)

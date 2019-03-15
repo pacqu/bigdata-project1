@@ -141,14 +141,19 @@ def find_common_uni_skill_interest(origin_id, userids):
 
 
 
-def runAll():
+def init_mongo():
     initUser()
     initSkill()
     initInterest()
+    initOrganization()
+    initProject()
+    initDistance()
+
+def run_mongo():
     #print(find_trusted_collaborators_skills(1,[4,5,6],'drinking')) #should return [5]
     a = find_common_uni_skill_interest(1, [4,2,3,6])
     for i in a:
         print(i)
 
-
-runAll()
+init_mongo()
+run_mongo()
