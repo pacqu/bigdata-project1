@@ -140,7 +140,8 @@ def match_uni_connect_users(tx, originid):
 #MIGHT NOT BE NECESSARY, WORKS FOR READABILITY OF OUTPUT
 def find_uni_connect_users(originid):
     results = {}
-    final_connections = {}
+    connected_users = {}
+    connected_ids = []
     with driver.session() as session:
         connections = session.write_transaction(match_uni_connect_users, originid)
         if len(connections) > 0:
@@ -154,9 +155,9 @@ def find_uni_connect_users(originid):
             }
             }
         for connection in connections:
-            if connection['d_user']['user_id'] in final_connections:
+            if connection['d_user']['user_id'] in connected_users:
                 continue
-            final_connections[connection['d_user']['user_id']] = {
+            connected_users[connection['d_user']['user_id']] = {
             'first_name': connection['d_user']['first_name'],
             'last_name': connection['d_user']['last_name'],
             'org': {
@@ -165,7 +166,9 @@ def find_uni_connect_users(originid):
             },
             'totalDist': connection['totalDist']
             }
-    results['connections'] = final_connections
+            connected_ids.append(connection['d_user']['user_id'])
+    results['connected_users'] = connected_users
+    results['connected_ids'] = connected_ids
     return results
 
 
