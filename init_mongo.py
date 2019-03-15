@@ -27,12 +27,12 @@ def initSkill():
         skill_reader = csv.reader(skillcsv, delimiter=',', quotechar='|')
         for row in skill_reader:
             if row[0] in users_skills: #row[0] is user_id
-                users_skills[row[0]].append({row[1]:row[2]})
+                users_skills[row[0]].append({row[1]:int(row[2])})
             else:
-                users_skills[row[0]]=[{row[1]:row[2]}]
+                users_skills[row[0]]=[{row[1]:int(row[2])}]
         # Adds the skills from the dict to MongoDB
         for user_id in users_skills:
-            users.update({'user_id':int(user_id)},
+            users.update_one({'user_id':int(user_id)},
                          {'$set':{'skills':users_skills[user_id]}})
 
 def initProject():
@@ -83,20 +83,44 @@ def initDistance():
 def find_trusted_collaborators_skills(origin_id, userids, desired_skill):
     trusted_collaborators = []
     users = db.users
+    pp = users.find({"user_id": {"$in" : userids }, "skills." + desired_skill : { "$exists" : True }})
+    '''
     for userid in userids:
-        pp = users.find_one({"user_id":userid})
+        pp = users.find_one({"user_id":userid, "skills." + desired_skill : { "$exists" : True }})
+        print(pp)
         for skills in pp['skills']:
             if desired_skill in skills:
-                trusted_collaborators.append(userid)
+                trusted_collaborators.append(userid)'''
+    print(list(pp))
     print(trusted_collaborators)
     return trusted_collaborators
+
+def find_common_uni_skill(origin_id, userids):
+    users = db.users
+    origin_skills = users.find_one({"user_id":origin_id},{"skills" : 1})['skills']
+    origin_skills_list = {k for d in origin_skills for k in d.keys()}
+
+    find_skills_fields = {"user_id": {"$in" : userids }, "$or":[]}
+    origin_skills_zero = []
+    for skill in origin_skills_list:
+        find_skills_fields["$or"].append({"skills." + skill : { "$exists" : True }})
+        origin_skills_zero.append({ "$ifNull" : [{'$arrayElemAt' : ["$skills." + skill , 0 ]}, 0]})
+
+    ppm=users.aggregate([
+    {'$match': find_skills_fields},
+    {'$addFields': {
+    'totalSkillMatch': {'$add' : origin_skills_zero }
+     }}
+    ])
+    return list(ppm)
 
 
 
 def runAll():
     initUser()
     initSkill()
-    find_trusted_collaborators_skills(1,[4,5,6],'drinking') #should return [5]
+    #find_trusted_collaborators_skills(1,[4,5,6],'drinking') #should return [5]
+    print(find_common_uni_skill(1, [4,2,3,6]))
 
 
 runAll()
