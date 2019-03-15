@@ -58,15 +58,21 @@ def initOrganization():
             organization_id = organizations.insert_one(organization).inserted_id
 
 def initInterest():
+    users = db.users
+    users_interests = {}
     interests = db.interests
     with open('Data/interest.csv') as interestcsv:
         interestcsv.readline() # skip first row
         interest_reader = csv.reader(interestcsv, delimiter=',', quotechar='|')
         for row in interest_reader:
-            interest = {"user_id":int(row[0]),
-                        "interest":row[1],
-                        "interest_level": row[2]}
-            interest_id = interests.insert_one(interest).inserted_id
+            if row[0] in users_interests: #row[0] is user_id
+                users_interests[row[0]].append({row[1]:int(row[2])})
+            else:
+                users_interests[row[0]]=[{row[1]:int(row[2])}]
+        # Adds the skills from the dict to MongoDB
+        for user_id in users_interests:
+            users.update_one({'user_id':int(user_id)},
+                         {'$set':{'interests':users_interests[user_id]}})
 
 def initDistance():
     distances = db.distances
@@ -81,7 +87,7 @@ def initDistance():
 
 # I dont think I need origin_id
 def find_trusted_collaborators_skills(origin_id, userids, desired_skill):
-    trusted_collaborators = []
+    #trusted_collaborators = []
     users = db.users
     pp = users.find({"user_id": {"$in" : userids }, "skills." + desired_skill : { "$exists" : True }})
     '''
@@ -91,26 +97,45 @@ def find_trusted_collaborators_skills(origin_id, userids, desired_skill):
         for skills in pp['skills']:
             if desired_skill in skills:
                 trusted_collaborators.append(userid)'''
-    print(list(pp))
-    print(trusted_collaborators)
-    return trusted_collaborators
+    #print(list(pp))
+    #print(trusted_collaborators)
+    #return trusted_collaborators
+    return list(pp)
 
-def find_common_uni_skill(origin_id, userids):
+def find_common_uni_skill_interest(origin_id, userids):
     users = db.users
-    origin_skills = users.find_one({"user_id":origin_id},{"skills" : 1})['skills']
+    users_skills_interests = users.find_one({"user_id":origin_id})
+    print(users_skills_interests)
+    origin_skills = users_skills_interests['skills']
     origin_skills_list = {k for d in origin_skills for k in d.keys()}
 
-    find_skills_fields = {"user_id": {"$in" : userids }, "$or":[]}
+    origin_interests = users_skills_interests['interests']
+    origin_interests_list = {k for d in origin_interests for k in d.keys()}
+
+    find_skills_interests_fields = {"user_id": {"$in" : userids }, "$or":[]}
     origin_skills_zero = []
+    origin_interests_zero = []
+    project_fields = {
+    'user_id': 1, 'first_name': 1, 'last_name': 1
+    }
     for skill in origin_skills_list:
-        find_skills_fields["$or"].append({"skills." + skill : { "$exists" : True }})
+        find_skills_interests_fields["$or"].append({"skills." + skill : { "$exists" : True }})
         origin_skills_zero.append({ "$ifNull" : [{'$arrayElemAt' : ["$skills." + skill , 0 ]}, 0]})
+        project_fields['skills.' + skill] = 1
+
+    for interest in origin_interests_list:
+        find_skills_interests_fields["$or"].append({"interests." + interest : { "$exists" : True }})
+        origin_interests_zero.append({ "$ifNull" : [{'$arrayElemAt' : ["$interests." + interest , 0 ]}, 0]})
+        project_fields['interests.' + interest] = 1
+
+    project_fields['totalSkillMatch'] = {'$add' : origin_skills_zero }
+    project_fields['totalInterestMatch'] = {'$add' : origin_interests_zero }
 
     ppm=users.aggregate([
-    {'$match': find_skills_fields},
-    {'$addFields': {
-    'totalSkillMatch': {'$add' : origin_skills_zero }
-     }}
+    {'$match': find_skills_interests_fields},
+    {'$project': project_fields},
+    {'$addFields': {'totalMatch' : {'$add': ['$totalSkillMatch', '$totalInterestMatch']}} },
+    {'$sort': {'totalMatch':-1}}
     ])
     return list(ppm)
 
@@ -119,8 +144,11 @@ def find_common_uni_skill(origin_id, userids):
 def runAll():
     initUser()
     initSkill()
-    #find_trusted_collaborators_skills(1,[4,5,6],'drinking') #should return [5]
-    print(find_common_uni_skill(1, [4,2,3,6]))
+    initInterest()
+    #print(find_trusted_collaborators_skills(1,[4,5,6],'drinking')) #should return [5]
+    a = find_common_uni_skill_interest(1, [4,2,3,6])
+    for i in a:
+        print(i)
 
 
 runAll()
