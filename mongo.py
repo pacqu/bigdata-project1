@@ -187,13 +187,23 @@ def find_user(user_id):
     user = users.find_one({"user_id":user_id})
     # print(user)
     return user
+
 def init_mongo():
+    print(" ")
+    print("CREATING MONGO DATABASE")
+    print("Initiailizing Users...")
     initUser()
+    print("\tInitiailizing User Skills...")
     initSkill()
+    print("\tInitiailizing User Interests...")
     initInterest()
+    print("Initiailizing Organizations...")
     initOrganization()
+    print("Initiailizing Projects...")
     initProject()
-    initDistance()
+    #initDistance()
+    print("CREATED MONGO DATABASE")
+    print("")
 
 def run_mongo():
     a = find_trusted_collaborators_skills(1,[4,5,6],['dancing','not_failing']) #should return [5]
@@ -202,5 +212,5 @@ def run_mongo():
         print(a[i])'''
     print(a)
 
-init_mongo()
+#init_mongo()
 #run_mongo()

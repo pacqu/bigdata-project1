@@ -92,21 +92,30 @@ def parse_proj_csv(session):
 
 def clear_neo():
     with driver.session() as session:
-        cleared = session.write_transaction(clear_users)
+        print("CLEARING NEO4J DATABASE")
+        print("Clearing Users...")
+        session.write_transaction(clear_users)
+        print("Clearing Organizations...")
+        session.write_transaction(clear_orgs)
+        print("Clearing Projectss...")
+        session.write_transaction(clear_projs)
+        print("CLEARED NEO4J DATABASE")
+        print(" ")
 
 def init_neo():
     with driver.session() as session:
-        cleared = session.write_transaction(clear_users)
-        #print(cleared)
-        wrote = session.write_transaction(clear_orgs)
-        #print(wrote)
+        print("CREATING NEO4J DATABASE")
+        print("Initiailizing Users...")
         parse_user_csv(session)
+        print("Initiailizing Organizations...")
         parse_org_csv(session)
+        print("Initiailizing Distances between Orgs...")
         parse_dist_csv(session)
+        print("Initiailizing Projects...")
         parse_proj_csv(session)
-        #print session.write_transaction(create_user_node,'Noam')
-        #print(session.read_transaction(print_users))
-        #print(session.read_transaction(print_orgs))
+        print("CREATED NEO4J DATABASE")
+        print(" ")
+
 
 '''
 Find:
