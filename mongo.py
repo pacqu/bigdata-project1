@@ -172,9 +172,11 @@ def find_common_uni_skill_interest(origin_id, userids):
 
 def find_user(user_id):
     users = db.users
-    user = users.find_one({"user_id":user_id})
-    # print(user)
-    return user
+    return users.find_one({"user_id":user_id})
+def find_org(org_name):
+    orgs = db.organizations
+    return orgs.find_one({"organization":org_name})
+
 def init_mongo():
     initUser()
     initSkill()
@@ -183,11 +185,4 @@ def init_mongo():
     initProject()
     initDistance()
 
-def run_mongo():
-    #print(find_trusted_collaborators_skills(1,[4,5,6],'drinking')) #should return [5]
-    a = find_common_uni_skill_interest(1, [])
-    for i in a:
-        print(a[i])
-
 init_mongo()
-#run_mongo()

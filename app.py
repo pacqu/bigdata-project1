@@ -57,12 +57,9 @@ def find_nearby_users():
                 print('\tCommon Interests: {interests} (Common Interest Score: {iscore})'.format(interests=interests, iscore=user['totalInterestMatch']))
             print('\tTotal Common Score: {tscore}'.format(tscore=user['totalMatch']))
             print('')
-def get_user(user_id):
-    user_results = []
-    return mongo.find_user(user_id)
 def find_user():
     user_id = int(input("What is the User's ID? "))
-    user = get_user(user_id)
+    user = mongo.find_user(user_id)
     print(user)
     if not user:
         print('User does not exist')
@@ -75,9 +72,19 @@ def find_user():
     if user['email'] or user['phone_number']:
         print('\tPhone Number: {phone_number}'.format(phone_number=user['phone_number']))
         print('\tEmail: {email}'.format(email=user['email']))
+
+def find_org():
+    org_name = input('What is the organization name? ')
+    org = mongo.find_org(org_name.capitalize())
+    if not org:
+        print('Organization does not exist.')
+        return
+    print('\tOrganization Name: {org_name}\n\tOrganization Type: {org_type}'.format(org_name=org['organization'], org_type=org['organization_type']))
+
 def print_commands():
     print('Commands:')
     print('\tuser: Prints user info')
+    print('\torg: Prints organization info')
     print('\tuni: Prints nearby colleagues')
 def command_line():
     print_commands()
@@ -90,6 +97,8 @@ def command_line():
             find_nearby_users()
         elif command == "user":
             find_user()
+        elif command == 'org':
+            find_org()
 
 def run():
     neo.init_neo()
