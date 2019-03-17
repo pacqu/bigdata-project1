@@ -13,10 +13,19 @@ def initUser():
         usercsv.readline()
         user_reader = csv.reader(usercsv, delimiter=',', quotechar='|')
         for row in user_reader:
-            user = {"user_id": int(row[0]),
-                    "first_name": row[1],
-                    "last_name": row[2]
-                    }
+            user = {}
+            if len(row) == 5:
+                user = {"user_id": int(row[0]),
+                        "first_name": row[1],
+                        "last_name": row[2],
+                        "phone_number":row[3],
+                        "email":row[4]
+                        }
+            else:
+                user = {"user_id": int(row[0]),
+                        "first_name": row[1],
+                        "last_name": row[2]
+                        }
             users_id = users.insert_one(user).inserted_id
 
 def initSkill():
@@ -163,6 +172,11 @@ def find_common_uni_skill_interest(origin_id, userids):
     final_results['common_users'] = list(ppm)
     return final_results
 
+def find_user(user_id):
+    users = db.users
+    user = users.find_one({"user_id":user_id})
+    # print(user)
+    return user
 def init_mongo():
     initUser()
     initSkill()
@@ -177,5 +191,5 @@ def run_mongo():
     for i in a:
         print(a[i])
 
-#init_mongo()
+init_mongo()
 #run_mongo()

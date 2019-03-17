@@ -1,7 +1,7 @@
-User_id,First name,Last name
-1,Noam,Sohn
-2,Justin,Pacquing
-3,Rita,Kirzhner
-4,Stella,Ma
-5,Mikey,Mechaly
-6,Jennifer,Raab
+User_id,First name,Last name, Phone number, Email
+1,Noam,Sohn,9144231993,ns@noam.com
+2,Justin,Pacquing,7181301998,jp@justin.com
+3,Rita,Kirzhner,7180641993,rk@rita.com
+4,Stella,Ma,2126111998,sm@stella.com
+5,Mikey,Mechaly,2034131993,mm@mikey.com
+6,Jennifer,Raab,212999999,jr@jennifer.com
