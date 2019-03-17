@@ -173,9 +173,9 @@ def init_mongo():
 
 def run_mongo():
     #print(find_trusted_collaborators_skills(1,[4,5,6],'drinking')) #should return [5]
-    a = find_common_uni_skill_interest(1, [4,2,3,6])
+    a = find_common_uni_skill_interest(1, [])
     for i in a:
-        print(i)
+        print(a[i])
 
-init_mongo()
+#init_mongo()
 #run_mongo()

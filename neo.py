@@ -116,26 +116,41 @@ Find:
 - Projects
 '''
 
-def match_users(session):
+def match_user(tx, originid):
+    user = tx.run('''MATCH (o_user:User{user_id: $userid})-[:WORKS_FOR]->(o_org:Organization)
+    RETURN o_user,o_org''',userid=originid).data()
+    #print(user)
+    if len(user) > 0:
+        return user
+    else:
+        return []
+
+def match_users(tx):
     pass
 
-def match_uni_users(session):
+def match_uni_users(tx):
     pass
 
-def match_orgs(session):
+def match_orgs(tx):
     pass
 
-def match_projs(session):
+def match_projs(tx):
     pass
 
 def match_uni_connect_users(tx, originid):
     return tx.run('''MATCH
-    p=(o_user:User{user_id: $userid})-[:WORKS_FOR]->(o_org:Organization{org_type:'U'})-[:DISTANCE*]->(d_org)<-[:WORKS_FOR]-(d_user)
+    p=(o_user:User{user_id: $userid})-[:WORKS_FOR]->(o_org:Organization{org_type:'U'})-[:DISTANCE*]-(d_org)<-[:WORKS_FOR]-(d_user)
     WITH *,relationships(p) AS f
     WITH *,[n in f WHERE n.distance IS NOT NULL] as noNull
     WITH *, reduce(totalDist = 0, n in noNull|totalDist + n.distance) as totalDist
     WHERE totalDist <= 10
-    RETURN o_user,o_org,totalDist,d_org,d_user ORDER BY totalDist''', userid=originid).data()
+    RETURN DISTINCT o_user,o_org,
+    CASE
+    WHEN o_org.name = d_org.name
+    THEN 0
+    ELSE totalDist
+    END AS totalDist,
+    d_org,d_user ORDER BY totalDist''',userid=originid).data()
 
 #MIGHT NOT BE NECESSARY, WORKS FOR READABILITY OF OUTPUT
 def find_uni_connect_users(originid):
@@ -154,6 +169,18 @@ def find_uni_connect_users(originid):
             'org_type': connection['o_org']['org_type']
             }
             }
+        else:
+            origin = session.write_transaction(match_user, originid)
+            if len(origin) > 0:
+                origin = origin[0]
+                results['o_user'] = {
+                'first_name': origin['o_user']['first_name'],
+                'last_name': origin['o_user']['last_name'],
+                'org': {
+                'name': origin['o_org']['name'],
+                'org_type': origin['o_org']['org_type'],
+                }
+                }
         for connection in connections:
             if connection['d_user']['user_id'] in connected_users:
                 continue
@@ -164,7 +191,7 @@ def find_uni_connect_users(originid):
             'name': connection['d_org']['name'],
             'org_type': connection['d_org']['org_type']
             },
-            'totalDist': connection['totalDist']
+            'total_dist': connection['totalDist']
             }
             connected_ids.append(connection['d_user']['user_id'])
     results['connected_users'] = connected_users
