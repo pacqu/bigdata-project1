@@ -63,6 +63,10 @@ def get_user(user_id):
 def find_user():
     user_id = int(input("What is the User's ID? "))
     user = get_user(user_id)
+    print(user)
+    if not user:
+        print('User does not exist')
+        return
     skills = ", ".join(["{k} - {v}".format(k=k,v=str(v)) for d in user['skills'] if d != {} for (k,v) in d.items()])
     interests = ", ".join(["{k} - {v}".format(k=k,v=str(v)) for d in user['interests'] if d != {} for (k,v) in d.items()])
     print(user)
