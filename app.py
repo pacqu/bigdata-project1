@@ -69,12 +69,9 @@ def find_nearby_users():
                 print('\tCommon Interests: {interests} (Common Interest Score: {iscore})'.format(interests=interests, iscore=user['totalInterestMatch']))
             print('\tTotal Common Score: {tscore}'.format(tscore=user['totalMatch']))
             print('')
-def get_user(user_id):
-    user_results = []
-    return mongo.find_user(user_id)
 def find_user():
     user_id = int(input("What is the User's ID? "))
-    user = get_user(user_id)
+    user = mongo.find_user(user_id)
     print(user)
     if not user:
         print('User does not exist')
@@ -87,11 +84,42 @@ def find_user():
     if user['email'] or user['phone_number']:
         print('\tPhone Number: {phone_number}'.format(phone_number=user['phone_number']))
         print('\tEmail: {email}'.format(email=user['email']))
+
+def find_org():
+    org_name = input('What is the organization name? ')
+    org = mongo.find_org(org_name.capitalize())
+    if not org:
+        print('Organization does not exist.')
+        return
+    print('\tOrganization Name: {org_name}\n\tOrganization Type: {org_type}'.format(org_name=org['organization'], org_type=org['organization_type']))
+def find_trusted():
+    origin_id = int(input("Please input an origin id: "))
+    desired_interests = []
+    num_interests = int(input("Please input how many interests to be queried: "))
+    for i in range(num_interests):
+        desired_interests.append(input("Please input desired interest #{num}: ".format(num=i+1)))
+    #print(desired_interests)
+    command_results = get_trusted_col_of_col(origin_id,desired_interests)
+    if command_results['o_user'] == None:
+        print('User of given origin id does not exist!')
+    else:
+        o_user = command_results['o_user']
+        print("Origin User: {fname} {lname}".format(fname=o_user['first_name'], lname=o_user['last_name']))
+        print("\tDesired Interest(s): " + ", ".join(desired_interests))
+        print(" ")
+        print("Trusted Colleagues of Colleagues (TCoC):")
+        for user in command_results['trusted']:
+            print("TCoC: {fname} {lname}".format(fname=user['first_name'], lname=user['last_name']))
+            print("\tInterests: " + ", ".join([k for d in user['interests'] for (k,v) in d.items()]))
+            print("\tTrusted Colleague(s) in Common with Origin: {cols}".format(cols=user['common_trusted']))
+            print(" ")
 def print_commands():
     print('Commands:')
     print('\tuser: Prints user info')
+    print('\torg: Prints organization info')
     print('\tuni: Prints nearby colleagues')
-    
+    print('\ttrusted: Prints trusted colleagues of colleagues')
+
 def command_line():
     print_commands()
     while True:
@@ -103,27 +131,10 @@ def command_line():
             find_nearby_users()
         elif command == "user":
             find_user()
+        elif command == 'org':
+            find_org()
         elif command == "trusted":
-            origin_id = int(input("Please input an origin id: "))
-            desired_interests = []
-            num_interests = int(input("Please input how many interests to be queried: "))
-            for i in range(num_interests):
-                desired_interests.append(input("Please input desired interest #{num}: ".format(num=i+1)))
-            #print(desired_interests)
-            command_results = get_trusted_col_of_col(origin_id,desired_interests)
-            if command_results['o_user'] == None:
-                print('User of given origin id does not exist!')
-            else:
-                o_user = command_results['o_user']
-                print("Origin User: {fname} {lname}".format(fname=o_user['first_name'], lname=o_user['last_name']))
-                print("\tDesired Interest(s): " + ", ".join(desired_interests))
-                print(" ")
-                print("Trusted Colleagues of Colleagues (TCoC):")
-                for user in command_results['trusted']:
-                    print("TCoC: {fname} {lname}".format(fname=user['first_name'], lname=user['last_name']))
-                    print("\tInterests: " + ", ".join([k for d in user['interests'] for (k,v) in d.items()]))
-                    print("\tTrusted Colleague(s) in Common with Origin: {cols}".format(cols=user['common_trusted']))
-                    print(" ")
+            find_trusted()
 
 def run():
     neo.init_neo()
