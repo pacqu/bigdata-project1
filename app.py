@@ -69,7 +69,6 @@ def find_user():
         return
     skills = ", ".join(["{k} - {v}".format(k=k,v=str(v)) for d in user['skills'] if d != {} for (k,v) in d.items()])
     interests = ", ".join(["{k} - {v}".format(k=k,v=str(v)) for d in user['interests'] if d != {} for (k,v) in d.items()])
-    print(user)
     print('{fname} {lname}'.format(fname=user['first_name'], lname=user['last_name']))
     print('\tSkills: {skills}'.format(skills=skills))
     print('\tInterests: {interests}'.format(interests=interests))
