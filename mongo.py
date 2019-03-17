@@ -86,21 +86,30 @@ def initDistance():
             distance_id = distances.insert_one(distance).inserted_id
 
 # I dont think I need origin_id
-def find_trusted_collaborators_skills(origin_id, userids, desired_skill):
-    #trusted_collaborators = []
+def find_trusted_collaborators_interests(origin_id, userids, desired_interests):
+    final_results = {}
     users = db.users
-    pp = users.find({"user_id": {"$in" : userids }, "skills." + desired_skill : { "$exists" : True }})
+    o_user = users.find_one({"user_id":origin_id})
+    final_results['o_user'] = o_user
+    find_interests_fields = {"user_id": {"$in" : userids }}
+    if len(desired_interests) > 0:
+        find_interests_fields["$or"] = []
+    for interest in desired_interests:
+        find_interests_fields["$or"].append({"interests." + interest : { "$exists" : True }})
+    pp = users.find(find_interests_fields)
     '''
     for userid in userids:
         pp = users.find_one({"user_id":userid, "skills." + desired_skill : { "$exists" : True }})
         print(pp)
         for skills in pp['skills']:
             if desired_skill in skills:
-                trusted_collaborators.append(userid)'''
+                trusted_collaborators.append(userid)
+    '''
     #print(list(pp))
     #print(trusted_collaborators)
     #return trusted_collaborators
-    return list(pp)
+    final_results['trusted'] = list(pp)
+    return final_results
 
 def find_common_uni_skill_interest(origin_id, userids):
     final_results = {}
@@ -124,7 +133,7 @@ def find_common_uni_skill_interest(origin_id, userids):
 
     #Initiailizing arrays/objects that will be used for ultimately getting appropriate users_skills
     #Match query object for getting initial list of users in provide ids that share origin's interests/skills
-    find_skills_interests_fields = {"user_id": {"$in" : userids }, "$or":[]}
+    find_skills_interests_fields = {"user_id": {"$in" : userids }}
     #Lists that will ultimately enable addition of the weights of skills/interests in common
     origin_skills_zero = []
     origin_interests_zero = []
@@ -132,6 +141,9 @@ def find_common_uni_skill_interest(origin_id, userids):
     project_fields = {
     'user_id': 1, 'first_name': 1, 'last_name': 1
     }
+
+    if (len(origin_skills_list) > 0) or (len(origin_interests_list) > 0):
+        find_skills_interests_fields["$or"] = []
 
     for skill in origin_skills_list:
         #If a user has this skill in common with origin, it will be included in results
@@ -172,10 +184,11 @@ def init_mongo():
     initDistance()
 
 def run_mongo():
-    #print(find_trusted_collaborators_skills(1,[4,5,6],'drinking')) #should return [5]
-    a = find_common_uni_skill_interest(1, [])
-    for i in a:
-        print(a[i])
+    a = find_trusted_collaborators_skills(1,[4,5,6],['dancing','not_failing']) #should return [5]
+    #a = find_common_uni_skill_interest(1, [])
+    '''for i in a:
+        print(a[i])'''
+    print(a)
 
 #init_mongo()
 #run_mongo()
