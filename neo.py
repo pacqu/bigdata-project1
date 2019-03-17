@@ -90,9 +90,10 @@ def parse_proj_csv(session):
                 rel = session.write_transaction(create_proj_user_rel, int(row[0]), row[1])
                 #print(rel)
 
-def clear_all():
+def clear_neo():
     with driver.session() as session:
         cleared = session.write_transaction(clear_users)
+
 def init_neo():
     with driver.session() as session:
         cleared = session.write_transaction(clear_users)
@@ -115,31 +116,47 @@ Find:
 - Projects
 '''
 
-def match_users(session):
+def match_user(tx, originid):
+    user = tx.run('''MATCH (o_user:User{user_id: $userid})-[:WORKS_FOR]->(o_org:Organization)
+    RETURN o_user,o_org''',userid=originid).data()
+    #print(user)
+    if len(user) > 0:
+        return user
+    else:
+        return []
+
+def match_users(tx):
     pass
 
-def match_uni_users(session):
+def match_uni_users(tx):
     pass
 
-def match_orgs(session):
+def match_orgs(tx):
     pass
 
-def match_projs(session):
+def match_projs(tx):
     pass
 
 def match_uni_connect_users(tx, originid):
     return tx.run('''MATCH
-    p=(o_user:User{user_id: $userid})-[:WORKS_FOR]->(o_org:Organization{org_type:'U'})-[:DISTANCE*]->(d_org)<-[:WORKS_FOR]-(d_user)
+    p=(o_user:User{user_id: $userid})-[:WORKS_FOR]->(o_org:Organization{org_type:'U'})-[:DISTANCE*]-(d_org)<-[:WORKS_FOR]-(d_user)
     WITH *,relationships(p) AS f
     WITH *,[n in f WHERE n.distance IS NOT NULL] as noNull
     WITH *, reduce(totalDist = 0, n in noNull|totalDist + n.distance) as totalDist
     WHERE totalDist <= 10
-    RETURN o_user,o_org,totalDist,d_org,d_user ORDER BY totalDist''', userid=originid).data()
+    RETURN DISTINCT o_user,o_org,
+    CASE
+    WHEN o_org.name = d_org.name
+    THEN 0
+    ELSE totalDist
+    END AS totalDist,
+    d_org,d_user ORDER BY totalDist''',userid=originid).data()
 
 #MIGHT NOT BE NECESSARY, WORKS FOR READABILITY OF OUTPUT
 def find_uni_connect_users(originid):
     results = {}
-    final_connections = {}
+    connected_users = {}
+    connected_ids = []
     with driver.session() as session:
         connections = session.write_transaction(match_uni_connect_users, originid)
         if len(connections) > 0:
@@ -152,19 +169,33 @@ def find_uni_connect_users(originid):
             'org_type': connection['o_org']['org_type']
             }
             }
+        else:
+            origin = session.write_transaction(match_user, originid)
+            if len(origin) > 0:
+                origin = origin[0]
+                results['o_user'] = {
+                'first_name': origin['o_user']['first_name'],
+                'last_name': origin['o_user']['last_name'],
+                'org': {
+                'name': origin['o_org']['name'],
+                'org_type': origin['o_org']['org_type'],
+                }
+                }
         for connection in connections:
-            if connection['d_user']['user_id'] in final_connections:
+            if connection['d_user']['user_id'] in connected_users:
                 continue
-            final_connections[connection['d_user']['user_id']] = {
+            connected_users[connection['d_user']['user_id']] = {
             'first_name': connection['d_user']['first_name'],
             'last_name': connection['d_user']['last_name'],
             'org': {
             'name': connection['d_org']['name'],
             'org_type': connection['d_org']['org_type']
             },
-            'totalDist': connection['totalDist']
+            'total_dist': connection['totalDist']
             }
-    results['connections'] = final_connections
+            connected_ids.append(connection['d_user']['user_id'])
+    results['connected_users'] = connected_users
+    results['connected_ids'] = connected_ids
     return results
 
 
