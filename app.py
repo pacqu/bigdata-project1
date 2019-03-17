@@ -72,8 +72,12 @@ def find_user():
     if user['email'] or user['phone_number']:
         print('\tPhone Number: {phone_number}'.format(phone_number=user['phone_number']))
         print('\tEmail: {email}'.format(email=user['email']))
-
+def print_commands():
+    print('Commands:')
+    print('\tuser: Prints user info')
+    print('\tuni: Prints nearby colleagues')
 def command_line():
+    print_commands()
     while True:
         command = input("Please input a command: ")
         command = command.lower()
