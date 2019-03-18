@@ -1,6 +1,12 @@
 import neo
 import mongo
 
+def validate_int(input):
+    if not input.isdigit():
+        print("Please provide an int")
+        return None
+    return int(input)
+
 def get_uni_connected_users(origin_id):
     final_results = []
     neo_results = neo.find_uni_connect_users(origin_id)
@@ -37,9 +43,12 @@ def get_trusted_col_of_col(origin_id, interests):
 
 def organize_list(input_list):
     return ", ".join(["{k} - {v}".format(k=k,v=str(v)) for d in input_list if d != {} for (k,v) in d.items()])
-    
+
 def find_nearby_users():
-    origin_id = int(input("Please input an origin id: "))
+    origin_id = input("Please input an origin id: ")
+    origin_id = validate_int(origin_id)
+    if not origin_id:
+        return
     command_results = get_uni_connected_users(origin_id)
     #print(command_results)
     origin_org = ""
@@ -73,10 +82,10 @@ def find_nearby_users():
             print('')
 def find_user():
     user_id = input("What is the User's ID? ")
-    if not user_id.isdigit():
-        print('Given ID is not valid')
+    user_id = validate_int(user_id)
+    if not user_id:
         return
-    user = mongo.find_user(int(user_id))
+    user = mongo.find_user(user_id)
     if not user:
         print('User does not exist')
         return
@@ -98,9 +107,15 @@ def find_org():
     print('\tOrganization Name: {org_name}\n\tOrganization Type: {org_type}'.format(org_name=org['organization'], org_type=org['organization_type']))
 
 def find_trusted():
-    origin_id = int(input("Please input an origin id: "))
+    origin_id = input("Please input an origin id: ")
+    origin_id = validate_int(origin_id)
+    if not origin_id:
+        return
     desired_interests = []
-    num_interests = int(input("Please input how many interests to be queried: "))
+    num_interests = input("Please input how many interests to be queried: ")
+    num_interests = validate_int(num_interests)
+    if not num_interests:
+        return
     for i in range(num_interests):
         desired_interests.append(input("Please input desired interest #{num}: ".format(num=i+1)))
     #print(desired_interests)
@@ -116,7 +131,8 @@ def find_trusted():
             print("Trusted Colleagues of Colleagues (TCoC):")
             for user in command_results['trusted']:
                 print("TCoC: {fname} {lname}".format(fname=user['first_name'], lname=user['last_name']))
-                print("\tInterests: " + ", ".join([k for d in user['interests'] for (k,v) in d.items()]))
+                print("\tInterests: " + ", " + organize_list(user['interests']))
+                      # join([k for d in user['interests'] for (k,v) in d.items()]))
                 print("\tTrusted Colleague(s) in Common with Origin: {cols}".format(cols=user['common_trusted']))
                 print(" ")
         else:
