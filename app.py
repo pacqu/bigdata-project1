@@ -1,5 +1,7 @@
 import neo
 import mongo
+import init_mongo
+import init_neo
 import sys
 
 def get_uni_connected_users(origin_id):
@@ -160,8 +162,8 @@ def load_csv():
         proj_csv = sys.argv[4]
         skill_csv = sys.argv[5]
         interest_csv = sys.argv[6]
-    neo.init_neo(user_csv,org_csv,dist_csv,proj_csv)
-    mongo.init_mongo(user_csv,skill_csv,interest_csv,org_csv, proj_csv, dist_csv)
+    init_neo.init(user_csv,org_csv,dist_csv,proj_csv)
+    init_mongo.init(user_csv,skill_csv,interest_csv,org_csv, proj_csv, dist_csv)
 
 
 def run():
