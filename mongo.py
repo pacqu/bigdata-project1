@@ -1,5 +1,4 @@
 import csv
-import pprint
 from pymongo import MongoClient
 client = MongoClient()
 
@@ -7,9 +6,9 @@ client = MongoClient()
 db = client.test_database
 client.drop_database(db)
 
-def initUser():
+def initUser(user_input_csv):
     users = db.users
-    with open('Data/user.csv') as usercsv:
+    with open(user_input_csv) as usercsv:
         usercsv.readline()
         user_reader = csv.reader(usercsv, delimiter=',', quotechar='|')
         for row in user_reader:
@@ -26,10 +25,10 @@ def initUser():
                     }
             users_id = users.insert_one(user).inserted_id
 
-def initSkill():
+def initSkill(skill_input_csv):
     users = db.users
     users_skills = {}
-    with open('Data/skill.csv') as skillcsv:
+    with open(skill_input_csv) as skillcsv:
         skillcsv.readline() # skip first row
         skill_reader = csv.reader(skillcsv, delimiter=',', quotechar='|')
         for row in skill_reader:
@@ -42,9 +41,9 @@ def initSkill():
             users.update_one({'user_id':int(user_id)},
                          {'$set':{'skills':users_skills[user_id]}})
 
-def initProject():
+def initProject(project_input_csv):
     projects = db.projects
-    with open('Data/project.csv') as projectcsv:
+    with open(project_input_csv) as projectcsv:
         projectcsv.readline() # skip first row
         project_reader = csv.reader(projectcsv, delimiter=',', quotechar='|')
         for row in project_reader:
@@ -53,9 +52,9 @@ def initProject():
                     }
             project_id = projects.insert_one(project).inserted_id
 
-def initOrganization():
+def initOrganization(org_input_csv):
     organizations = db.organizations
-    with open('Data/organization.csv') as organizationcsv:
+    with open(org_input_csv) as organizationcsv:
         organizationcsv.readline() # skip first row
         organization_reader = csv.reader(organizationcsv, delimiter=',', quotechar='|')
         for row in organization_reader:
@@ -64,11 +63,11 @@ def initOrganization():
                             "organization_type": row[2]}
             organization_id = organizations.insert_one(organization).inserted_id
 
-def initInterest():
+def initInterest(interest_input_csv):
     users = db.users
     users_interests = {}
     interests = db.interests
-    with open('Data/interest.csv') as interestcsv:
+    with open(interest_input_csv) as interestcsv:
         interestcsv.readline() # skip first row
         interest_reader = csv.reader(interestcsv, delimiter=',', quotechar='|')
         for row in interest_reader:
@@ -81,9 +80,9 @@ def initInterest():
             users.update_one({'user_id':int(user_id)},
                          {'$set':{'interests':users_interests[user_id]}})
 
-def initDistance():
+def initDistance(dist_input_csv):
     distances = db.distances
-    with open('Data/distance.csv') as distancecsv:
+    with open(dist_input_csv) as distancecsv:
         distancecsv.readline()
         distance_reader = csv.reader(distancecsv, delimiter=',', quotechar='|')
         for row in distance_reader:
@@ -92,7 +91,6 @@ def initDistance():
                         "distance": row[2]}
             distance_id = distances.insert_one(distance).inserted_id
 
-# I dont think I need origin_id
 def find_trusted_collaborators_interests(origin_id, userids, desired_interests):
     final_results = {}
     users = db.users
@@ -104,17 +102,6 @@ def find_trusted_collaborators_interests(origin_id, userids, desired_interests):
     for interest in desired_interests:
         find_interests_fields["$or"].append({"interests." + interest : { "$exists" : True }})
     pp = users.find(find_interests_fields)
-    '''
-    for userid in userids:
-        pp = users.find_one({"user_id":userid, "skills." + desired_skill : { "$exists" : True }})
-        print(pp)
-        for skills in pp['skills']:
-            if desired_skill in skills:
-                trusted_collaborators.append(userid)
-    '''
-    #print(list(pp))
-    #print(trusted_collaborators)
-    #return trusted_collaborators
     final_results['trusted'] = list(pp)
     return final_results
 
@@ -189,12 +176,10 @@ def find_org(org_name):
     orgs = db.organizations
     return orgs.find_one({"organization":org_name})
 
-def init_mongo():
-    initUser()
-    initSkill()
-    initInterest()
-    initOrganization()
-    initProject()
-    initDistance()
-
-init_mongo()
+def init_mongo(*arg):
+    initUser(arg[0])
+    initSkill(arg[1])
+    initInterest(arg[2])
+    initOrganization(arg[3])
+    initProject(arg[4])
+    initDistance(arg[5])

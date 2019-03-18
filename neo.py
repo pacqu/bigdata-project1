@@ -14,8 +14,8 @@ def create_user_node(tx, userid, firstname, lastname):
 def print_users(tx):
     return tx.run("MATCH (a:User) RETURN a").data()
 
-def parse_user_csv(session):
-    with open('Data/user.csv', newline='') as usercsv:
+def parse_user_csv(session, user_input_csv):
+    with open(user_input_csv, newline='') as usercsv:
         userreader = csv.reader(usercsv, delimiter=',', quotechar='|')
         for row in userreader:
             if row[0] != 'User_id':
@@ -45,8 +45,8 @@ def create_dist_rel(tx, org1, org2, dist):
 def print_orgs(tx):
     return tx.run("MATCH (a:Organization) RETURN a").data()
 
-def parse_org_csv(session):
-    with open('Data/organization.csv', newline='') as orgcsv:
+def parse_org_csv(session, org_input_csv):
+    with open(org_input_csv, newline='') as orgcsv:
         orgreader = csv.reader(orgcsv, delimiter=',', quotechar='|')
         for row in orgreader:
             if row[0] != 'User_id':
@@ -56,8 +56,8 @@ def parse_org_csv(session):
                 rel = session.write_transaction(create_org_user_rel, int(row[0]), row[1], row[2])
                 # print(rel)
 
-def parse_dist_csv(session):
-    with open('Data/distance.csv', newline='') as distcsv:
+def parse_dist_csv(session, dist_input_csv):
+    with open(dist_input_csv, newline='') as distcsv:
         orgreader = csv.reader(distcsv, delimiter=',', quotechar='|')
         for row in orgreader:
             if row[2] != 'Distance':
@@ -79,8 +79,8 @@ def create_proj_user_rel(tx, userid, project):
     CREATE (a)<-[:WORKED_ON]-(b)
     RETURN id(a), id(b)''', userid=userid, project=project).data()
 
-def parse_proj_csv(session):
-    with open('Data/project.csv', newline='') as projcsv:
+def parse_proj_csv(session, proj_input_csv):
+    with open(proj_input_csv, newline='') as projcsv:
         orgreader = csv.reader(projcsv, delimiter=',', quotechar='|')
         for row in orgreader:
             if row[1] != 'Project':
@@ -94,16 +94,18 @@ def clear_neo():
     with driver.session() as session:
         cleared = session.write_transaction(clear_users)
 
-def init_neo():
+def init_neo(*arg):
+    # print('neo', arg)
+    # arg order: user, org, dist, proj
     with driver.session() as session:
         cleared = session.write_transaction(clear_users)
         #print(cleared)
         wrote = session.write_transaction(clear_orgs)
         #print(wrote)
-        parse_user_csv(session)
-        parse_org_csv(session)
-        parse_dist_csv(session)
-        parse_proj_csv(session)
+        parse_user_csv(session, arg[0])
+        parse_org_csv(session, arg[1])
+        parse_dist_csv(session, arg[2])
+        parse_proj_csv(session, arg[3])
         #print session.write_transaction(create_user_node,'Noam')
         #print(session.read_transaction(print_users))
         #print(session.read_transaction(print_orgs))

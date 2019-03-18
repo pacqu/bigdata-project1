@@ -1,5 +1,6 @@
 import neo
 import mongo
+import sys
 
 def get_uni_connected_users(origin_id):
     final_results = []
@@ -70,9 +71,11 @@ def find_nearby_users():
             print('\tTotal Common Score: {tscore}'.format(tscore=user['totalMatch']))
             print('')
 def find_user():
-    user_id = int(input("What is the User's ID? "))
-    user = mongo.find_user(user_id)
-    print(user)
+    user_id = input("What is the User's ID? ")
+    if not user_id.isdigit():
+        print('Given ID is not valid')
+        return
+    user = mongo.find_user(int(user_id))
     if not user:
         print('User does not exist')
         return
@@ -92,6 +95,7 @@ def find_org():
         print('Organization does not exist.')
         return
     print('\tOrganization Name: {org_name}\n\tOrganization Type: {org_type}'.format(org_name=org['organization'], org_type=org['organization_type']))
+
 def find_trusted():
     origin_id = int(input("Please input an origin id: "))
     desired_interests = []
@@ -113,12 +117,14 @@ def find_trusted():
             print("\tInterests: " + ", ".join([k for d in user['interests'] for (k,v) in d.items()]))
             print("\tTrusted Colleague(s) in Common with Origin: {cols}".format(cols=user['common_trusted']))
             print(" ")
+
 def print_commands():
     print('Commands:')
     print('\tuser: Prints user info')
     print('\torg: Prints organization info')
-    print('\tuni: Prints nearby colleagues')
+    print('\tnearby: Prints nearby colleagues')
     print('\ttrusted: Prints trusted colleagues of colleagues')
+    print('\tquit: Quits out of the program')
 
 def command_line():
     print_commands()
@@ -127,7 +133,7 @@ def command_line():
         command = command.lower()
         if command == "quit" or command == "q":
             break
-        elif command == "uni":
+        elif command == "nearby":
             find_nearby_users()
         elif command == "user":
             find_user()
@@ -136,12 +142,30 @@ def command_line():
         elif command == "trusted":
             find_trusted()
 
+# python app.py Data/user.csv Data/organization.csv Data/distance.csv Data/project.csv Data/skill.csv Data/interest.csv
+def load_csv():
+    user_csv = 'Data/user.csv'
+    org_csv = 'Data/organization.csv'
+    dist_csv = 'Data/distance.csv'
+    proj_csv = 'Data/project.csv'
+    skill_csv = 'Data/skill.csv'
+    interest_csv = 'Data/interest.csv'
+
+    if len(sys.argv) != 7:
+        print('Using default values')
+    else:
+        user_csv = sys.argv[1]
+        org_csv = sys.argv[2]
+        dist_csv = sys.argv[3]
+        proj_csv = sys.argv[4]
+        skill_csv = sys.argv[5]
+        interest_csv = sys.argv[6]
+    neo.init_neo(user_csv,org_csv,dist_csv,proj_csv)
+    mongo.init_mongo(user_csv,skill_csv,interest_csv,org_csv, proj_csv, dist_csv)
+
+
 def run():
-    neo.init_neo()
-    mongo.init_mongo()
+    load_csv()
     command_line()
 
 run()
-
-# init_neo.find_trusted_collaborators('1')
-# init_neo.find_uni_connect_users('1')
