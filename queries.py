@@ -34,8 +34,10 @@ def get_trusted_col_of_col(origin_id, interests):
     for trust in mongo_results['trusted']:
         trust['common_trusted'] = ", ".join(neo_results['common_trust'][trust['user_id']])
     return mongo_results
+
 def organize_list(input_list):
     return ", ".join(["{k} - {v}".format(k=k,v=str(v)) for d in input_list if d != {} for (k,v) in d.items()])
+    
 def find_nearby_users():
     origin_id = int(input("Please input an origin id: "))
     command_results = get_uni_connected_users(origin_id)
