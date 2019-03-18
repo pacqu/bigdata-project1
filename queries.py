@@ -54,11 +54,11 @@ def find_nearby_users():
     origin_org = ""
     for i in range(len(command_results)):
         user = command_results[i]
+        skills = organize_list(user['skills'])
+        interests = organize_list(user['interests'])
         if i == 0:
-            print('Origin User:')
-            skills = organize_list(user['skills'])
-            interests = organize_list(user['interests'])
             origin_org = user['org']['name']
+            print('Origin User:')
             print('{fname} {lname} - Organization: {orgname}({orgtype})'.format(fname=user['first_name'], lname=user['last_name'], orgname=user['org']['name'],orgtype=user['org']['org_type']))
             print('\tSkills: {skills}'.format(skills=skills))
             print('\tInterests: {interests}'.format(interests=interests))
@@ -71,9 +71,7 @@ def find_nearby_users():
                 else:
                     print('Given User is not a University User!')
         else:
-            print('{fname} {lname} - Organization: {orgname}({orgtype}) - Distance from {o_org}: {dist}'.format(fname=user['first_name'], lname=user['last_name'], orgname=user['org']['name'], orgtype=user['org']['org_type'], o_org=origin_org, dist=user['total_dist']))
-            skills = organize_list(user['skills'])
-            interests = organize_list(user['interests'])
+            print('{counter}. {fname} {lname} - Organization: {orgname}({orgtype}) - Distance from {o_org}: {dist}'.format(counter=i, fname=user['first_name'], lname=user['last_name'], orgname=user['org']['name'], orgtype=user['org']['org_type'], o_org=origin_org, dist=user['total_dist']))
             if len(skills):
                 print('\tCommon Skills: {skills} (Common Skill Score: {sscore})'.format(skills=skills, sscore=user['totalSkillMatch']))
             if len(interests):
