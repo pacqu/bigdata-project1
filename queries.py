@@ -3,7 +3,7 @@ import mongo
 
 def validate_int(input):
     if not input.isdigit():
-        print("Please provide an int")
+        print("\tPlease provide an int")
         return None
     return int(input)
 
@@ -12,7 +12,7 @@ def get_uni_connected_users(origin_id):
     neo_results = neo.find_uni_connect_users(origin_id)
     #print(neo_results)
     if 'o_user' not in neo_results:
-        print('User of given origin id does not exist!')
+        print('\tUser of given origin id does not exist!')
     else:
         origin_user = neo_results['o_user']
         #print(origin_user)
@@ -87,7 +87,7 @@ def find_user():
         return
     user = mongo.find_user(user_id)
     if not user:
-        print('User does not exist')
+        print('\tUser does not exist')
         return
     skills = organize_list(user['skills'])
     interests = organize_list(user['interests'])
@@ -102,7 +102,7 @@ def find_org():
     org_name = input('What is the organization name? ')
     org = mongo.find_org(org_name.capitalize())
     if not org:
-        print('Organization does not exist.')
+        print('\tOrganization does not exist.')
         return
     print('\tOrganization Name: {org_name}\n\tOrganization Type: {org_type}'.format(org_name=org['organization'], org_type=org['organization_type']))
 
@@ -121,7 +121,7 @@ def find_trusted():
     #print(desired_interests)
     command_results = get_trusted_col_of_col(origin_id,desired_interests)
     if command_results['o_user'] == None:
-        print('User of given origin id does not exist!')
+        print('\tUser of given origin id does not exist!')
     else:
         o_user = command_results['o_user']
         print("Origin User: {fname} {lname}".format(fname=o_user['first_name'], lname=o_user['last_name']))
