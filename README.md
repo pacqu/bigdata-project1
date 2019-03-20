@@ -44,10 +44,24 @@
 
 #### Our Neo4j Database has 3 types of Relationships
 * WORKS_FOR
-  * Connects User --> Organization
+ * Connects User --> Organization
+ * Describes what organization a user works for
+ * Has one property:
+  * 'since': the year the user started working
+   
 * WORKED_ON
+ * Connects User --> Project
+ * Describes what project(s) a user worked on
+ * Has two properties:
+  * 'from': the year the user started working on the project
+  * 'to': the year the user last worked on the project
+    
 * DISTANCE
-
+ * Connects Organization --> Organization
+ * Describes how far an organization is from another
+ * Has one property:
+  * 'distance': the distance between two organizations
+   
 ### MongoDB Database
 ![MongoDB Diagram](Data/mongodbdiagram.png)
 #### Collections
