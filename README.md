@@ -1,24 +1,29 @@
-Big Data by Justin Pacquing and Noam Sohn
+# Big Data by Justin Pacquing and Noam Sohn
 
-# Expected Data in CSV:
-## User:
+## Expected Data in CSV:
+### User:
 * User_id, First_name, Last_name, Phone_number, Email
-## Project:
+### Project:
 * User_id, Project_name
-## Interests:
+### Interests:
 * User_id, Interest, Interest_level
-## Skills:
+### Skills:
 * User_id, Skill, Skill Level
-## Organizations
+### Organizations
 * User_id, Organization, Organization_type
-## Distance:
+### Distance:
 * Organization 1, Organization 2, Distance
 
-## Explanation and Diagrams:
+## Diagrams and Explanations:
+### Neo4j Database:
+![Neo4j Diagram](Data/neo4jdiagram.png)
 
-# Options Queries:
+### MongoDB Database
+![MongoDB Diagram](Data/mongodbdiagram.png)
+
+## Options Queries:
 ##
 
-# All queries
+## All queries
 
-# Potential improvements
+## Potential improvements
