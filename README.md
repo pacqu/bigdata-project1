@@ -64,11 +64,37 @@
    
 ### MongoDB Database
 ![MongoDB Diagram](Data/mongodbdiagram.png)
-#### Collections
 
+#### Collections
+* Users
+  * The registered users of the Application
+  * Each User document has five fields:
+    * 'first_name': the user's first name
+    * 'last_name': the user's last name
+    * 'user_id': the unique identifier of a user from the loaded user csv
+    * 'skills': an array of documents each containg a user skill as a field and the weight of that skill as the value
+    * 'interests': an array of documents each containg a user interest as a field and the weight of that interest as the value
+   
+* Organizations
+  * The organizations users work for
+  * Each Organization document have two fields:
+    * 'name': the name of the organization
+    * 'org_type': the type of organization
+      * Possible Value of 'org_type' are:
+        * 'U': University
+        * 'C': Company
+        * 'G': Government
+       
+* Projects
+  * The projects users have worked on
+  * Each Project document have one field:
+    * 'name': the name of the project
+  
 ## Options Queries:
 ##
 
 ## All queries
 
 ## Potential improvements
+* Add additional information for each entity
+* Be able to create/delete/modify entities from the command line
