@@ -18,8 +18,39 @@
 ### Neo4j Database:
 ![Neo4j Diagram](Data/neo4jdiagram.png)
 
+#### Our Neo4j Database has 3 types of Entities
+* Users
+  * The registered users of the Application
+  * Users have three properties:
+    * 'first_name': the user's first name
+    * 'last_name': the user's last name
+    * 'user_id': the unique identifier of a user from the loaded user csv
+   
+* Organizations
+  * The organizations users work for
+  * Organizations have two properties:
+    * 'name': the name of the organization
+    * 'org_type': the type of organization
+      * Possible Value of 'org_type' are:
+        * 'U': University
+        * 'C': Company
+        * 'G': Government
+       
+* Projects
+  * The projects users have worked on
+  * Projects have one property:
+    * 'name': the name of the project
+
+
+#### Our Neo4j Database has 3 types of Relationships
+* WORKS_FOR
+  * Connects User --> Organization
+* WORKED_ON
+* DISTANCE
+
 ### MongoDB Database
 ![MongoDB Diagram](Data/mongodbdiagram.png)
+#### Collections
 
 ## Options Queries:
 ##
