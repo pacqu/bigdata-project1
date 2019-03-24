@@ -104,6 +104,14 @@ def find_org():
         return
     print('\tOrganization Name: {org_name}\n\tOrganization Type: {org_type}'.format(org_name=org['organization'], org_type=org['organization_type']))
 
+def find_proj():
+    proj_name = input('What is the project name? ')
+    proj = mongo.find_proj(proj_name)
+    if not proj:
+        print('\tProject does not exist.')
+        return
+    print('\tProject Name: {proj_name}'.format(proj_name=proj['project']))
+
 def find_trusted():
     origin_id = input("Please input an origin id: ")
     origin_id = validate_int(origin_id)
@@ -121,6 +129,7 @@ def find_trusted():
     if command_results['o_user'] == None:
         print('\tUser of given origin id does not exist!')
     else:
+        #print(command_results)
         o_user = command_results['o_user']
         print("Origin User: {fname} {lname}".format(fname=o_user['first_name'], lname=o_user['last_name']))
         print("\tDesired Interest(s): " + ", ".join(desired_interests))
@@ -129,7 +138,7 @@ def find_trusted():
             print("Trusted Colleagues of Colleagues (TCoC):")
             for user in command_results['trusted']:
                 print("TCoC: {fname} {lname}".format(fname=user['first_name'], lname=user['last_name']))
-                print("\tInterests: " + ", " + organize_list(user['interests']))
+                print("\tInterests: " + organize_list(user['interests']))
                       # join([k for d in user['interests'] for (k,v) in d.items()]))
                 print("\tTrusted Colleague(s) in Common with Origin: {cols}".format(cols=user['common_trusted']))
                 print(" ")
@@ -140,6 +149,7 @@ def print_commands():
     print('\thelp: Prints list of available commands')
     print('\tuser: Prints user info')
     print('\torg: Prints organization info')
+    print('\tproj: Prints project info')
     print('\tnearby: Prints nearby colleagues')
     print('\ttrusted: Prints trusted colleagues of colleagues')
     print('\tquit: Quits out of the program')
