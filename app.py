@@ -16,6 +16,8 @@ def command_line():
             queries.find_user()
         elif command == 'org':
             queries.find_org()
+        elif command == 'proj':
+            queries.find_proj()
         elif command == "trusted":
             queries.find_trusted()
         elif command == "help":

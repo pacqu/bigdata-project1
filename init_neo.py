@@ -33,7 +33,7 @@ def create_org_node(tx, name, orgtype):
 
 def create_org_user_rel(tx, userid, name, orgtype):
     return tx.run('''MATCH (a:Organization {name: $name, org_type:$orgtype}), (b:User {user_id:$userid})
-    CREATE (a)<-[:WORKS_FOR]-(b)
+    CREATE (a)<-[:WORKS_FOR {since: 2019}]-(b)
     RETURN id(a), id(b)''', userid=userid, name=name, orgtype=orgtype).data()
 
 def create_dist_rel(tx, org1, org2, dist):
@@ -75,7 +75,7 @@ def create_proj_node(tx,project):
 
 def create_proj_user_rel(tx, userid, project):
     return tx.run('''MATCH (a:Project {project: $project}), (b:User {user_id:$userid})
-    CREATE (a)<-[:WORKED_ON]-(b)
+    CREATE (a)<-[:WORKED_ON {from: 2019, to:2019}]-(b)
     RETURN id(a), id(b)''', userid=userid, project=project).data()
 
 def parse_proj_csv(session, proj_input_csv):

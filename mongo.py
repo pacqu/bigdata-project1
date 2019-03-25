@@ -86,3 +86,6 @@ def find_user(user_id):
 def find_org(org_name):
     orgs = db.organizations
     return orgs.find_one({"organization":org_name})
+def find_proj(proj_name):
+    projs = db.projects
+    return projs.find_one({"project":proj_name})
